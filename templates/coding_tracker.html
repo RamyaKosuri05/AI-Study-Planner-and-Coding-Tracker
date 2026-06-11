@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Coding Tracker{% endblock %}
+
+{% block content %}
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:32px;">
+    <h2>💻 Coding Tracker</h2>
+    <button class="btn btn-primary" onclick="Modal.open('addProblemModal')">+ Log Problem</button>
+</div>
+
+<div class="card">
+    {% if problems %}
+    <table>
+        <thead>
+            <tr>
+                <th>Problem Name</th>
+                <th>Platform</th>
+                <th>Difficulty</th>
+                <th>Date Solved</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in problems %}
+            <tr>
+                <td style="font-weight:600;">{{ p.problem_name }}</td>
+                <td><span class="badge" style="background:var(--bg-elevated);color:var(--text-primary);border:1px solid var(--border);">{{ p.platform }}</span></td>
+                <td><span class="badge badge-{{ p.difficulty }}">{{ p.difficulty }}</span></td>
+                <td>{{ p.date_solved.strftime('%b %d, %Y') }}</td>
+                <td>
+                    <button class="btn btn-danger" style="padding:4px 8px;" onclick="deleteProblem({{ p.problem_id }})">Delete</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div style="text-align:center;color:var(--text-muted);padding:40px;">
+        No problems logged yet. Start practicing!
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal -->
+<div class="modal-backdrop" id="addProblemModal">
+    <div class="modal">
+        <h3 style="margin-bottom:16px;">Log Problem</h3>
+        <form onsubmit="handleProblemSubmit(event)">
+            <input type="text" id="probName" class="form-control" placeholder="Problem Name (e.g. Two Sum)" required>
+            
+            <select id="probPlatform" class="form-control">
+                <option value="LeetCode">LeetCode</option>
+                <option value="HackerRank">HackerRank</option>
+                <option value="Codeforces">Codeforces</option>
+                <option value="Other">Other</option>
+            </select>
+            
+            <select id="probDifficulty" class="form-control">
+                <option value="Easy">Easy</option>
+                <option value="Medium" selected>Medium</option>
+                <option value="Hard">Hard</option>
+            </select>
+            
+            <input type="date" id="probDate" class="form-control">
+            
+            <div style="display:flex;gap:10px;margin-top:16px;">
+                <button type="button" class="btn" style="flex:1;background:var(--bg-elevated);color:var(--text-primary);" onclick="Modal.close('addProblemModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary" style="flex:1;">Save Problem</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function handleProblemSubmit(e) {
+    e.preventDefault();
+    apiCall('/coding/add', 'POST', {
+        problem_name: document.getElementById('probName').value,
+        platform: document.getElementById('probPlatform').value,
+        difficulty: document.getElementById('probDifficulty').value,
+        date_solved: document.getElementById('probDate').value
+    });
+}
+function deleteProblem(id) {
+    if(confirm('Delete this problem?')) {
+        apiCall(`/coding/delete/${id}`, 'DELETE', {});
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+{% block title %}Profile{% endblock %}
+{% block page_title %}My Profile{% endblock %}
+
+{% block content %}
+<!-- ─── Profile Hero ─── -->
+<div class="profile-hero animate-slide-up">
+  <!-- Avatar -->
+  <div class="profile-avatar-lg" style="background: {{ current_user.avatar_color }};"
+       id="profileAvatar">
+    {{ current_user.username[0].upper() }}
+  </div>
+
+  <!-- Info -->
+  <div style="flex:1;">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+      <div>
+        <h2 style="font-size:28px;font-weight:900;color:var(--text-primary);letter-spacing:-0.03em;margin-bottom:4px;">
+          {{ current_user.username }}
+        </h2>
+        <div style="font-size:14px;color:var(--text-secondary);margin-bottom:12px;">
+          ✉️ {{ current_user.email }}
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <span class="badge badge-accent">🎓 Student</span>
+          <span class="badge badge-easy">● Active</span>
+          <span class="badge badge-info">📅 Member since {{ member_since }}</span>
+          <span class="badge badge-medium">{{ days_active }} days active</span>
+        </div>
+      </div>
+      <button class="btn btn-ghost" onclick="Modal.open('editProfileModal')">✏️ Edit Profile</button>
+    </div>
+
+    <!-- Score Meter + Quick Stats -->
+    <div style="display:flex;align-items:center;gap:32px;margin-top:24px;flex-wrap:wrap;">
+      <!-- SVG Score Ring -->
+      <div class="score-meter">
+        <svg class="score-ring" width="110" height="110" viewBox="0 0 110 110">
+          <defs>
+            <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#6c63ff"/>
+              <stop offset="100%" style="stop-color:#ff6584"/>
+            </linearGradient>
+          </defs>
+          <circle class="score-bg" cx="55" cy="55" r="46"/>
+          <circle class="score-fill" cx="55" cy="55" r="46" data-score="{{ score }}"/>
+        </svg>
+        <div class="score-text">
+          <span class="score-number" data-count="{{ score }}">0</span>
+          <span class="score-label">Score</span>
+        </div>
+      </div>
+
+      <!-- Quick stats inline -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;flex:1;">
+        <div>
+          <div style="font-size:13px;color:var(--text-muted);margin-bottom:2px;">Total Study Hours</div>
+          <div style="font-size:22px;font-weight:800;color:var(--text-primary);" data-count="{{ total_hours }}" data-suffix="h">0h</div>
+        </div>
+        <div>
+          <div style="font-size:13px;color:var(--text-muted);margin-bottom:2px;">Problems Solved</div>
+          <div style="font-size:22px;font-weight:800;color:var(--text-primary);" data-count="{{ total_problems }}">0</div>
+        </div>
+        <div>
+          <div style="font-size:13px;color:var(--text-muted);margin-bottom:2px;">Tasks Completed</div>
+          <div style="font-size:22px;font-weight:800;color:var(--text-primary);">{{ done_tasks }}/{{ total_tasks }}</div>
+        </div>
+        <div>
+          <div style="font-size:13px;color:var(--text-muted);margin-bottom:2px;">Favorite Platform</div>
+          <div style="font-size:18px;font-weight:700;color:var(--accent);">{{ fav_platform }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Streak Card ─── -->
+<div class="grid-2 mb-24">
+  <div class="card animate-slide-up" style="animation-delay:0.1s;">
+    <div class="chart-title mb-20">🔥 Streak Stats</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+      <div style="text-align:center;padding:20px;background:var(--bg-elevated);border-radius:16px;border:1px solid var(--border);">
+        <div class="streak-flame" style="font-size:36px;">🔥</div>
+        <div style="font-size:40px;font-weight:900;color:var(--warning);letter-spacing:-0.03em;" data-count="{{ streak.current }}">0</div>
+        <div style="font-size:13px;color:var(--text-secondary);font-weight:500;">Current Streak</div>
+      </div>
+      <div style="text-align:center;padding:20px;background:var(--bg-elevated);border-radius:16px;border:1px solid var(--border);">
+        <div style="font-size:36px;">🏆</div>
+        <div style="font-size:40px;font-weight:900;color:var(--accent);letter-spacing:-0.03em;" data-count="{{ streak.longest }}">0</div>
+        <div style="font-size:13px;color:var(--text-secondary);font-weight:500;">Longest Streak</div>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;padding:14px;
+                background: {{ 'var(--success-dim)' if streak.has_activity_today else 'var(--warning-dim)' }};
+                border-radius:12px;border:1px solid {{ 'rgba(34,197,94,0.2)' if streak.has_activity_today else 'rgba(245,158,11,0.2)' }};
+                display:flex;align-items:center;gap:10px;">
+      <span style="font-size:20px;">{{ '✅' if streak.has_activity_today else '⚡' }}</span>
+      <span style="font-size:13px;font-weight:600;
+                   color:{{ 'var(--success)' if streak.has_activity_today else 'var(--warning)' }};">
+        {{ "You've logged activity today — streak active!" if streak.has_activity_today else "No activity logged today. Log tasks or problems to keep your streak!" }}
+      </span>
+    </div>
+
+    <!-- Streak milestones -->
+    <div style="margin-top:20px;">
+      <div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;">
+        Milestones
+      </div>
+      <div style="display:flex;gap:8px;">
+        {% set milestones = [(3, '🌱', '3-day'), (7, '⭐', '7-day'), (14, '🌟', '14-day'), (30, '👑', '30-day')] %}
+        {% for days, icon, label in milestones %}
+        <div style="flex:1;padding:10px;border-radius:10px;text-align:center;border:1px solid var(--border);
+                    background:{{ 'var(--success-dim)' if streak.longest >= days else 'var(--bg-elevated)' }};">
+          <div style="font-size:20px;">{{ icon }}</div>
+          <div style="font-size:10px;color:{{ 'var(--success)' if streak.longest >= days else 'var(--text-muted)' }};
+                      font-weight:600;margin-top:2px;">{{ label }}</div>
+          {% if streak.longest >= days %}
+          <div style="font-size:9px;color:var(--success);margin-top:1px;">Achieved!</div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Suggestions -->
+  <div class="card animate-slide-up" style="animation-delay:0.15s;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+      <div style="width:36px;height:36px;background:linear-gradient(135deg,#6c63ff,#ff6584);
+                  border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;">
+        🤖
+      </div>
+      <div>
+        <div class="chart-title">AI Recommendations</div>
+        <div class="chart-subtitle">Personalized for your progress</div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px;" class="stagger">
+      {% for s in suggestions %}
+      <div class="suggestion-item" style="animation-delay: {{ loop.index0 * 0.08 }}s;">
+        <span class="suggestion-icon">{{ s.icon }}</span>
+        <div>
+          <div class="suggestion-msg">{{ s.msg }}</div>
+          <div style="font-size:11px;color:var(--accent);margin-top:3px;font-weight:500;text-transform:uppercase;letter-spacing:0.04em;">
+            {{ s.type }}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- ─── Color Picker ─── -->
+<div class="card animate-slide-up" style="animation-delay:0.2s;">
+  <div class="chart-title mb-16">🎨 Avatar Color</div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+    {% set colors = ['#6c63ff','#ff6584','#43d9ad','#f59e0b','#3b82f6','#ec4899','#10b981','#f97316','#8b5cf6','#ef4444'] %}
+    {% for c in colors %}
+    <button onclick="selectColor('{{ c }}')" title="{{ c }}"
+            style="width:36px;height:36px;border-radius:50%;background:{{ c }};border:3px solid {{ 'white' if c == current_user.avatar_color else 'transparent' }};
+                   cursor:pointer;transition:transform 0.2s,border-color 0.2s;outline:none;"
+            id="color-{{ loop.index }}"
+            onmouseenter="this.style.transform='scale(1.15)'"
+            onmouseleave="this.style.transform='scale(1)'">
+    </button>
+    {% endfor %}
+    <div style="font-size:13px;color:var(--text-muted);margin-left:8px;">
+      Current: <span style="color:var(--text-primary);font-weight:600;">{{ current_user.avatar_color }}</span>
+    </div>
+  </div>
+</div>
+
+
+<!-- ─── Edit Profile Modal ─── -->
+<div class="modal-backdrop" id="editProfileModal" role="dialog" aria-modal="true" aria-labelledby="editProfileTitle">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="editProfileTitle">✏️ Edit Profile</h2>
+      <button class="modal-close" onclick="Modal.close('editProfileModal')" aria-label="Close">✕</button>
+    </div>
+    <form id="editProfileForm">
+      <div class="form-group">
+        <label class="form-label" for="editUsername">Username</label>
+        <div class="input-icon-wrap">
+          <span class="input-icon">👤</span>
+          <input type="text" id="editUsername" name="username" class="form-control"
+                 value="{{ current_user.username }}" required minlength="3">
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:8px;">
+        <button type="button" class="btn btn-ghost" style="flex:1;" onclick="Modal.close('editProfileModal')">Cancel</button>
+        <button type="submit" class="btn btn-primary" style="flex:2;">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  initScoreRing();
+
+  async function selectColor(color) {
+    const { ok } = await apiCall('/profile/update', 'POST', { avatar_color: color });
+    if (ok) {
+      document.getElementById('profileAvatar').style.background = color;
+      document.querySelector('.topbar-avatar').style.background = color;
+      Toast.show('Avatar color updated!', 'success');
+    }
+  }
+
+  document.getElementById('editProfileForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const { ok, data } = await apiCall('/profile/update', 'POST', {
+      username: document.getElementById('editUsername').value
+    });
+    if (ok) {
+      Toast.show('Profile updated!', 'success');
+      setTimeout(() => location.reload(), 800);
+    } else {
+      Toast.show(data.error || 'Update failed', 'error');
+    }
+  });
+
+  async function apiCall(url, method, body) {
+    const r = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: body ? JSON.stringify(body) : undefined
+    });
+    return { ok: r.ok, data: await r.json() };
+  }
+</script>
+{% endblock %}

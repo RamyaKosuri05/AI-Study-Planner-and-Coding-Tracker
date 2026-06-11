@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:32px;">
+    <div>
+        <h1 style="color:var(--text-primary);margin-bottom:4px;">Welcome back, {{ current_user.username }}</h1>
+        <div style="color:var(--text-secondary);font-style:italic;">"{{ quote }}"</div>
+    </div>
+    <button class="btn btn-primary" onclick="Modal.open('logSessionModal')">+ Log Study Session</button>
+</div>
+
+<!-- Stats -->
+<div class="grid-3" style="margin-bottom:32px;">
+    <div class="card stat-card" style="border-top: 4px solid var(--accent)">
+        <div class="stat-icon">⏱️</div>
+        <div>
+            <div class="stat-val">{{ total_hours }}h</div>
+            <div class="stat-label">Total Study Hours</div>
+        </div>
+    </div>
+    <div class="card stat-card" style="border-top: 4px solid var(--cyan)">
+        <div class="stat-icon">💻</div>
+        <div>
+            <div class="stat-val">{{ total_problems }}</div>
+            <div class="stat-label">Problems Solved</div>
+        </div>
+    </div>
+    <div class="card stat-card" style="border-top: 4px solid var(--pink)">
+        <div class="stat-icon">🔥</div>
+        <div>
+            <div class="stat-val">{{ current_streak }}</div>
+            <div class="stat-label">Current Streak</div>
+        </div>
+    </div>
+</div>
+
+<!-- Progress & Upcoming -->
+<div class="grid-2">
+    <div class="card">
+        <h3 style="margin-bottom:16px;">Task Progress</h3>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <span>Overall Completion</span>
+            <span style="font-weight:700;color:var(--accent);">{{ progress_pct }}%</span>
+        </div>
+        <div style="height:12px;background:var(--bg-elevated);border-radius:6px;overflow:hidden;margin-bottom:24px;">
+            <div style="height:100%;width:{{ progress_pct }}%;background:var(--accent);transition:width 1s;"></div>
+        </div>
+        
+        <p style="color:var(--text-muted);font-size:14px;">Log tasks in the Study Tasks tab to increase your score.</p>
+    </div>
+    
+    <div class="card">
+        <h3 style="margin-bottom:16px;">Upcoming Tasks</h3>
+        {% if upcoming %}
+            <div style="display:flex;flex-direction:column;gap:12px;">
+            {% for t in upcoming %}
+                <div style="padding:12px;background:var(--bg-elevated);border-radius:8px;display:flex;justify-content:space-between;">
+                    <div>
+                        <div style="font-weight:600;">{{ t.task_name }}</div>
+                        <div style="font-size:12px;color:var(--text-muted);">Due: {{ t.deadline.strftime('%b %d') if t.deadline else 'No deadline' }}</div>
+                    </div>
+                    <span class="badge badge-{{ t.priority }}">{{ t.priority }}</span>
+                </div>
+            {% endfor %}
+            </div>
+        {% else %}
+            <div style="padding:20px;text-align:center;color:var(--text-muted);background:var(--bg-elevated);border-radius:12px;">
+                No pending tasks. You're all caught up!
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Log Session Modal -->
+<div class="modal-backdrop" id="logSessionModal">
+    <div class="modal">
+        <h3 style="margin-bottom:16px;">⏱️ Log Study Session</h3>
+        <form onsubmit="handleSessionSubmit(event)">
+            <label style="display:block;margin-bottom:8px;font-size:14px;">Hours Studied</label>
+            <input type="number" step="0.5" min="0.5" id="sessionHours" class="form-control" required placeholder="e.g. 2.5">
+            
+            <div style="display:flex;gap:10px;margin-top:16px;">
+                <button type="button" class="btn" style="flex:1;background:var(--bg-elevated);color:var(--text-primary);" onclick="Modal.close('logSessionModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary" style="flex:1;">Save Session</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function handleSessionSubmit(e) {
+    e.preventDefault();
+    apiCall('/sessions/add', 'POST', {
+        hours_studied: document.getElementById('sessionHours').value
+    });
+}
+</script>
+{% endblock %}

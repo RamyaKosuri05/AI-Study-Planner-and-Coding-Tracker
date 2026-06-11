@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Study Planner{% endblock %}
+
+{% block content %}
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:32px;">
+    <h2>📋 Study Tasks</h2>
+    <button class="btn btn-primary" onclick="Modal.open('addTaskModal')">+ Add Task</button>
+</div>
+
+<div class="card">
+    {% if tasks %}
+    <table>
+        <thead>
+            <tr>
+                <th>Task Name</th>
+                <th>Priority</th>
+                <th>Deadline</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for t in tasks %}
+            <tr>
+                <td style="font-weight:600;{% if t.status=='Completed' %}text-decoration:line-through;color:var(--text-muted);{% endif %}">{{ t.task_name }}</td>
+                <td><span class="badge badge-{{ t.priority }}">{{ t.priority }}</span></td>
+                <td>{{ t.deadline.strftime('%b %d, %Y') if t.deadline else '-' }}</td>
+                <td>
+                    <select onchange="updateTask({{ t.task_id }}, this.value)" style="background:var(--bg-elevated);color:var(--text-primary);border:1px solid var(--border);padding:4px 8px;border-radius:6px;">
+                        <option value="Pending" {% if t.status=='Pending' %}selected{% endif %}>Pending</option>
+                        <option value="In Progress" {% if t.status=='In Progress' %}selected{% endif %}>In Progress</option>
+                        <option value="Completed" {% if t.status=='Completed' %}selected{% endif %}>Completed</option>
+                    </select>
+                </td>
+                <td>
+                    <button class="btn btn-danger" style="padding:4px 8px;" onclick="deleteTask({{ t.task_id }})">Delete</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div style="text-align:center;color:var(--text-muted);padding:40px;">
+        No tasks found. Add your first study task!
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal -->
+<div class="modal-backdrop" id="addTaskModal">
+    <div class="modal">
+        <h3 style="margin-bottom:16px;">Add New Task</h3>
+        <form onsubmit="handleTaskSubmit(event)">
+            <input type="text" id="taskName" class="form-control" placeholder="Task Name" required>
+            
+            <select id="taskPriority" class="form-control">
+                <option value="High">High Priority</option>
+                <option value="Medium" selected>Medium Priority</option>
+                <option value="Low">Low Priority</option>
+            </select>
+            
+            <input type="date" id="taskDeadline" class="form-control">
+            
+            <div style="display:flex;gap:10px;margin-top:16px;">
+                <button type="button" class="btn" style="flex:1;background:var(--bg-elevated);color:var(--text-primary);" onclick="Modal.close('addTaskModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary" style="flex:1;">Save Task</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function handleTaskSubmit(e) {
+    e.preventDefault();
+    apiCall('/planner/add', 'POST', {
+        task_name: document.getElementById('taskName').value,
+        priority: document.getElementById('taskPriority').value,
+        deadline: document.getElementById('taskDeadline').value
+    });
+}
+function updateTask(id, status) {
+    apiCall(`/planner/update/${id}`, 'PUT', {status});
+}
+function deleteTask(id) {
+    if(confirm('Delete this task?')) {
+        apiCall(`/planner/delete/${id}`, 'DELETE', {});
+    }
+}
+</script>
+{% endblock %}

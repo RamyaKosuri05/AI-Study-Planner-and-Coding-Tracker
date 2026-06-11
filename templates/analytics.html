@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}Analytics{% endblock %}
+
+{% block content %}
+<div style="margin-bottom:32px;">
+    <h2>📈 Analytics Dashboard</h2>
+    <p style="color:var(--text-muted);">Real-time metrics tracking your progress.</p>
+</div>
+
+<div class="grid-2" style="margin-bottom:24px;">
+    <div class="card">
+        <h3 style="margin-bottom:16px;">Task Completion</h3>
+        <div id="tasksChartContainer" style="height:200px;position:relative;">
+            <canvas id="tasksChart"></canvas>
+        </div>
+    </div>
+    <div class="card">
+        <h3 style="margin-bottom:16px;">Difficulty Distribution</h3>
+        <div id="diffChartContainer" style="height:200px;position:relative;">
+            <canvas id="diffChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="grid-2">
+    <div class="card">
+        <h3 style="margin-bottom:16px;">Weekly Productivity (Hours)</h3>
+        <div id="prodChartContainer" style="height:200px;position:relative;">
+            <canvas id="prodChart"></canvas>
+        </div>
+    </div>
+    <div class="card">
+        <h3 style="margin-bottom:16px;">Coding Activity by Platform</h3>
+        <div id="codingChartContainer" style="height:200px;position:relative;">
+            <canvas id="codingChart"></canvas>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.font.family = 'Inter';
+
+async function initCharts() {
+    const fetchChart = async (url, id, type) => {
+        const res = await fetch(url);
+        const data = await res.json();
+        
+        const containerId = id + 'Container';
+        const total = data.data.reduce((a, b) => a + b, 0);
+        
+        if (total === 0) {
+            document.getElementById(containerId).innerHTML = `
+                <div style="height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:14px;border:1px dashed var(--border);border-radius:8px;">
+                    No data logged yet
+                </div>
+            `;
+            return;
+        }
+
+        const ctx = document.getElementById(id);
+        if (!ctx) return; // If replaced by empty state string above
+        
+        // destroy old chart if it exists
+        let chartStatus = Chart.getChart(id);
+        if (chartStatus != undefined) {
+          chartStatus.destroy();
+        }
+        
+        new Chart(ctx, {
+            type: type,
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: type === 'line' ? 'Hours' : 'Count',
+                    data: data.data,
+                    backgroundColor: data.colors || '#4f46e5',
+                    borderColor: type === 'line' ? '#4f46e5' : 'rgba(0,0,0,0.1)',
+                    borderWidth: type === 'line' ? 2 : 1,
+                    borderRadius: type === 'bar' ? 4 : 0,
+                    tension: 0.4,
+                    fill: type === 'line' ? {target: 'origin', above: 'rgba(79, 70, 229, 0.1)'} : false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: type !== 'bar' && type !== 'line' } }
+            }
+        });
+    };
+
+    fetchChart('/api/charts/tasks', 'tasksChart', 'pie');
+    fetchChart('/api/charts/difficulty', 'diffChart', 'doughnut');
+    fetchChart('/api/charts/productivity', 'prodChart', 'line');
+    fetchChart('/api/charts/coding', 'codingChart', 'bar');
+}
+
+document.addEventListener('DOMContentLoaded', initCharts);
+window.initCharts = initCharts; // Expose for theme toggling
+</script>
+{% endblock %}

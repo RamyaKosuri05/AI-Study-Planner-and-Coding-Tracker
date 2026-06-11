@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %} - Study4u</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Init theme
+        const saved = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', saved);
+    </script>
+</head>
+<body>
+    {% if current_user.is_authenticated %}
+    <div class="app-layout">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="brand">
+                <span style="display:flex;align-items:center;gap:8px;">
+                    <div style="width:24px;height:24px;background:var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;">🎓</div>
+                    Study4u
+                </span>
+                <button onclick="toggleTheme()" class="theme-btn" id="themeToggleBtn" title="Toggle Theme">
+                    🌙
+                </button>
+            </div>
+            
+            <a href="{{ url_for('dashboard') }}" class="nav-item">📊 Dashboard</a>
+            <a href="{{ url_for('planner') }}" class="nav-item">📋 Study Tasks</a>
+            <a href="{{ url_for('coding_tracker') }}" class="nav-item">💻 Coding Tracker</a>
+            <a href="{{ url_for('analytics') }}" class="nav-item">📈 Analytics</a>
+            <a href="{{ url_for('reports') }}" class="nav-item">📄 Reports</a>
+            
+            <div style="flex:1;"></div>
+            
+            <div style="padding:16px;background:var(--bg-card);border-radius:10px;margin-bottom:10px;border:1px solid var(--border);">
+                <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">Logged in as</div>
+                <div style="font-weight:600;color:var(--text-primary);">{{ current_user.username }}</div>
+            </div>
+            
+            <a href="{{ url_for('logout') }}" class="nav-item" style="color:var(--danger);">🚪 Logout</a>
+        </nav>
+        
+        <!-- Main -->
+        <main class="main-content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  <div style="padding: 12px; margin-bottom: 20px; border-radius: 8px; border: 1px solid var(--accent); background: var(--bg-card); color: var(--text-primary);">
+                    {{ message }}
+                  </div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+    {% else %}
+        {% block auth_content %}{% endblock %}
+    {% endif %}
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        // Sync button icon on load
+        const tBtn = document.getElementById('themeToggleBtn');
+        if (tBtn) {
+            tBtn.innerText = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';
+        }
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

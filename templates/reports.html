@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+
+{% block content %}
+<div style="margin-bottom:32px;">
+    <h2>📄 Progress Reports</h2>
+    <p style="color:var(--text-muted);">Weekly and monthly productivity breakdowns.</p>
+</div>
+
+<div class="grid-2">
+    <!-- Weekly Report -->
+    <div class="card" style="border:1px solid var(--accent);">
+        <h3 style="color:var(--accent);margin-bottom:20px;">📅 Weekly Report</h3>
+        
+        <div style="display:flex;justify-content:space-between;margin-bottom:16px;">
+            <span>Hours Studied (Last 7 days)</span>
+            <span style="font-weight:700;">{{ w_hrs }}h</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:16px;">
+            <span>Problems Solved (Last 7 days)</span>
+            <span style="font-weight:700;">{{ w_probs }}</span>
+        </div>
+        
+        <div style="margin-top:24px;padding-top:24px;border-top:1px solid var(--border);">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:14px;color:var(--text-muted);">Weekly Productivity Score</span>
+                <span style="font-size:32px;font-weight:700;font-family:'Space Grotesk';color:var(--accent);">{{ w_score }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monthly Report -->
+    <div class="card" style="border:1px solid var(--pink);">
+        <h3 style="color:var(--pink);margin-bottom:20px;">🗓️ Monthly Report</h3>
+        
+        <div style="display:flex;justify-content:space-between;margin-bottom:16px;">
+            <span>Hours Studied (Last 30 days)</span>
+            <span style="font-weight:700;">{{ m_hrs }}h</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:16px;">
+            <span>Problems Solved (Last 30 days)</span>
+            <span style="font-weight:700;">{{ m_probs }}</span>
+        </div>
+        
+        <div style="margin-top:24px;padding-top:24px;border-top:1px solid var(--border);">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:14px;color:var(--text-muted);">Monthly Productivity Score</span>
+                <span style="font-size:32px;font-weight:700;font-family:'Space Grotesk';color:var(--pink);">{{ m_score }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
