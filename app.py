@@ -265,6 +265,7 @@ def add_session():
     d = request.json
     s = StudySessions(user_id=current_user.user_id, hours_studied=float(d['hours_studied']), date=date.today())
     db.session.add(s)
+    db.session.commit()
     update_streak(current_user.user_id)
     return jsonify({'success': True})
 
